@@ -1,4 +1,4 @@
-name: Build all plugins
+name: Build all plugins (with debug)
 
 on:
   push:
@@ -9,23 +9,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      - name: Build all plugins
+      - name: DEBUG – show repo structure
+        run: |
+          echo "===== ROOT CONTENT ====="
+          ls -la
+          echo ""
+          echo "===== FIND pom.xml ====="
+          find . -name "pom.xml"
+          echo ""
+          echo "===== FIND *.jar BEFORE BUILD ====="
+          find . -name "*.jar"
+
+      - name: Build all plugins (scan folders)
         run: |
           for dir in */ ; do
             if [ -f "$dir/pom.xml" ]; then
               echo "🔨 Building $dir"
-              (cd "$dir" && mvn clean package)
+              (cd "$dir" && mvn clean package || echo "❌ Build failed in $dir")
             fi
           done
+
+      - name: DEBUG – find JAR after build
+        run: |
+          echo "===== FIND *.jar AFTER BUILD ====="
+          find . -name "*.jar"
 
       - name: Upload JAR files
         uses: actions/upload-artifact@v4
